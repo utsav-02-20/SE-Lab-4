@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delivery Agent System | Project P03 | IIIT Bhagalpur</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+    <!-- Header Section -->
+    <header class="app-header">
+        <div class="header-container">
+            <div class="header-title">
+                <h1>
+                    <span>Delivery Agent System</span>
+                    <span class="header-badge">Project P03</span>
+                </h1>
+                <div class="header-subtitle">CS311 Software Engineering Lab &bull; IIIT Bhagalpur &bull; Interconnected Dispatch Architecture</div>
+            </div>
+            <div class="quick-stats">
+                <div class="stat-pill">
+                    <span class="label">Total Orders</span>
+                    <span class="value" id="stat-total">0</span>
+                </div>
+                <div class="stat-pill">
+                    <span class="label">Active Dispatch</span>
+                    <span class="value" id="stat-active" style="color: #38bdf8;">0</span>
+                </div>
+                <div class="stat-pill">
+                    <span class="label">Delivered</span>
+                    <span class="value" id="stat-delivered" style="color: #4ade80;">0</span>
+                </div>
+                <div class="stat-pill">
+                    <span class="label">Cancelled</span>
+                    <span class="value" id="stat-cancelled" style="color: #f87171;">0</span>
+                </div>
+                <div class="stat-pill">
+                    <span class="label">Rewards</span>
+                    <span class="value" id="stat-rewards" style="color: #34d399;">+₹0</span>
+                </div>
+                <div class="stat-pill">
+                    <span class="label">Penalties</span>
+                    <span class="value" id="stat-penalties" style="color: #fb7185;">-₹0</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <div class="nav-tabs-wrapper">
+        <nav class="nav-tabs">
+            <button class="tab-btn active" data-tab="tab-book">Book Delivery</button>
+            <button class="tab-btn" data-tab="tab-track">Track & Status</button>
+            <button class="tab-btn" data-tab="tab-resched-cancel">Reschedule & Cancel</button>
+            <button class="tab-btn" data-tab="tab-rewards">Rewards & Penalties</button>
+            <button class="tab-btn" data-tab="tab-courier-services">Courier Past Services</button>
+            <button class="tab-btn" data-tab="tab-archive">Delivery Archive</button>
+            <button class="tab-btn" data-tab="tab-couriers">Couriers & Rates</button>
+            <button class="tab-btn" data-tab="tab-specs">System Specifications</button>
+        </nav>
+    </div>
+
+    <!-- Datalist for Locality Autocomplete -->
+    <datalist id="locality-list"></datalist>
+
+    <!-- Main Container -->
+    <main class="main-content">
+
+        <!-- TAB 1: BOOK DELIVERY -->
+        <div id="tab-book" class="tab-pane active">
+            <div class="grid-2">
+                <!-- Booking Form Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Order Dispatch & Courier Assignment</h2>
+                    </div>
+                    <div class="card-body">
+                        <form id="booking-form" onsubmit="handleBookDelivery(event)">
+                            <div class="section-label">1. Sender & Origin Parameters</div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Sender / Client Name</label>
+                                    <input type="text" id="book-sender-name" class="form-control" required placeholder="e.g. Flipkart Warehouse" value="Flipkart Fulfillment Center">
+                                </div>
+                                <div class="form-group">
+                                    <label>Sender Contact</label>
+                                    <input type="text" id="book-sender-phone" class="form-control" required placeholder="+91-..." value="+91-9988776655">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Origin Address</label>
+                                    <input type="text" id="book-source-addr" class="form-control" required placeholder="Street / Warehouse" value="Plot 8, Logistics Hub">
+                                </div>
+                                <div class="form-group">
+                                    <label>Origin Locality</label>
+                                    <input type="text" id="book-source-loc" class="form-control" list="locality-list" required placeholder="Select locality" value="Zero Mile">
+                                </div>
+                            </div>
+
+                            <div class="section-label" style="margin-top: 0.9rem;">2. Recipient & Destination Parameters</div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Recipient Name</label>
+                                    <input type="text" id="book-recv-name" class="form-control" required placeholder="Customer Name" value="Rohit Sharma">
+                                </div>
+                                <div class="form-group">
+                                    <label>Recipient Contact</label>
+                                    <input type="text" id="book-recv-phone" class="form-control" required placeholder="+91-..." value="+91-9123456789">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Destination Address</label>
+                                    <input type="text" id="book-dest-addr" class="form-control" required placeholder="House / Flat / Department" value="CSE Dept, IIIT Bhagalpur">
+                                </div>
+                                <div class="form-group">
+                                    <label>Destination Locality</label>
+                                    <input type="text" id="book-dest-loc" class="form-control" list="locality-list" required placeholder="Select locality" value="Sabour">
+                                </div>
+                            </div>
+
+                            <div class="section-label" style="margin-top: 0.9rem;">3. Consignment Specifications</div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Gross Weight (kg)</label>
+                                    <input type="number" id="book-weight" class="form-control" step="0.1" min="0.1" max="200" required value="2.5">
+                                </div>
+                                <div class="form-group">
+                                    <label>Consignment Type</label>
+                                    <select id="book-pkg-type" class="form-control">
+                                        <option value="Electronics">Electronics</option>
+                                        <option value="Apparel">Apparel / Textiles</option>
+                                        <option value="Books">Books & Stationary</option>
+                                        <option value="Medicines">Pharmaceuticals</option>
+                                        <option value="Fragile Items">Fragile / Glassware</option>
+                                        <option value="Documents">Commercial Documents</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Service SLA Tier</label>
+                                    <select id="book-service-type" class="form-control">
+                                        <option value="Standard">Standard (24 Hours SLA)</option>
+                                        <option value="Express">Express (4 Hours SLA)</option>
+                                        <option value="SameDay">Same Day (8 Hours SLA)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Live Automated Courier Recommendation Box -->
+                            <div id="auto-quote-container">
+                                <!-- Populated dynamically by auto-quote listener -->
+                            </div>
+
+                            <div style="margin-top: 1.15rem;">
+                                <button type="submit" id="btn-book-submit" class="btn btn-primary" style="width: 100%; font-size: 0.92rem; padding: 0.75rem;">
+                                    Confirm Order & Auto-Assign Courier
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Booking Confirmation Slip Container (Output 1) -->
+                <div>
+                    <div id="booking-confirmation-container">
+                        <div class="card" style="border: 1px dashed var(--gray-300); background-color: #fafbfc;">
+                            <div class="card-body" style="text-align: center; padding: 2.8rem 1.5rem; color: var(--gray-600);">
+                                <h3 style="color: var(--gray-800); font-size: 0.98rem; margin-bottom: 0.35rem;">Booking Confirmation (Output 1)</h3>
+                                <p style="font-size: 0.83rem;">Submit the delivery request on the left to evaluate candidate couriers, assign the optimal partner, and generate the formal booking receipt.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Orders Table -->
+                    <div class="card" style="margin-top: 1rem;">
+                        <div class="card-header">
+                            <h3>Active System Records</h3>
+                            <button class="btn btn-secondary btn-sm" onclick="loadRecentDeliveries()">Refresh</button>
+                        </div>
+                        <div class="card-body" style="padding: 0;">
+                            <div class="table-responsive">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Tracking ID</th>
+                                            <th>Origin</th>
+                                            <th>Destination</th>
+                                            <th>Assigned Courier</th>
+                                            <th>Cost</th>
+                                            <th>Status</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="recent-deliveries-body">
+                                        <!-- Populated dynamically -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: TRACK & CHECK STATUS -->
+        <div id="tab-track" class="tab-pane">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Consignment Status & Transit Audit Trail</h2>
+                </div>
+                <div class="card-body">
+                    <div class="chip-container" id="track-quick-chips">
+                        <!-- Populated dynamically with active orders -->
+                    </div>
+                    <div style="display: flex; gap: 0.5rem; max-width: 700px;">
+                        <input type="text" id="track-search-input" class="form-control" placeholder="Enter Tracking ID (e.g. TRK-2026-001)" style="font-family: var(--font-mono); font-weight: 600;">
+                        <button class="btn btn-primary" onclick="searchTracking()">Search Record</button>
+                    </div>
+
+                    <div id="track-report-container">
+                        <!-- Populated with Output 2 Delivery Status Report -->
+                        <div style="margin-top: 2rem; text-align: center; color: var(--gray-600); font-size: 0.85rem;">
+                            Enter a Tracking ID or select an active consignment above to view the audit trail and transit status report.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: RESCHEDULE & CANCEL -->
+        <div id="tab-resched-cancel" class="tab-pane">
+            <div class="grid-2">
+                <!-- Reschedule Form Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Reschedule Delivery Schedule</h2>
+                    </div>
+                    <div class="card-body">
+                        <form onsubmit="handleRescheduleSubmit(event)">
+                            <div class="form-group">
+                                <label>Tracking ID</label>
+                                <input type="text" id="resched-tracking-id" class="form-control" required placeholder="e.g. TRK-2026-003" style="font-family: var(--font-mono);">
+                            </div>
+                            <div class="form-group">
+                                <label>New SLA Delivery Timestamp</label>
+                                <input type="datetime-local" id="resched-new-date" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Reason for Rescheduling</label>
+                                <input type="text" id="resched-reason" class="form-control" required placeholder="Reason for adjusting delivery SLA" value="Recipient premises unavailable during scheduled window">
+                            </div>
+                            <button type="submit" class="btn btn-primary" style="width: 100%;">
+                                Confirm Rescheduled Slot
+                            </button>
+                        </form>
+                        <div id="resched-result-container" style="margin-top: 1rem;">
+                            <!-- Output 4 rendered here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cancel Form Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Cancel Consignment Booking</h2>
+                    </div>
+                    <div class="card-body">
+                        <form onsubmit="handleCancelSubmit(event)">
+                            <div class="form-group">
+                                <label>Tracking ID</label>
+                                <input type="text" id="cancel-tracking-id" class="form-control" required placeholder="e.g. TRK-2026-003" style="font-family: var(--font-mono);">
+                            </div>
+                            <div class="form-group">
+                                <label>Cancellation Initiated By</label>
+                                <select id="cancel-by" class="form-control">
+                                    <option value="Customer">Customer</option>
+                                    <option value="Portal">Online Shopping Portal</option>
+                                    <option value="Courier">Courier Partner (Penalty applies)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Cancellation Justification</label>
+                                <input type="text" id="cancel-reason" class="form-control" required placeholder="State operational reason" value="Customer cancelled item purchase">
+                            </div>
+                            <button type="submit" class="btn btn-danger" style="width: 100%;">
+                                Process Cancellation
+                            </button>
+                        </form>
+                        <div id="cancel-result-container" style="margin-top: 1rem;">
+                            <!-- Output 3 rendered here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 4: REWARDS & PENALTIES -->
+        <div id="tab-rewards" class="tab-pane">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Courier Rewards & Penalties Ledger (Output 5)</h2>
+                    <button class="btn btn-secondary btn-sm" onclick="loadRewardsPenalties()">Refresh Ledger</button>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info" style="margin-bottom: 1.25rem;">
+                        <strong>SLA Enforcement Policy:</strong> Consignments completed on or before SLA deadline award <strong>+₹100 reward bonus</strong>. Deliveries exceeding SLA window incur a <strong>-₹50 penalty</strong>. Unfulfilled courier-initiated cancellations incur <strong>-₹80 penalty</strong>.
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Notice ID</th>
+                                    <th>Tracking ID</th>
+                                    <th>Courier Partner</th>
+                                    <th>Classification</th>
+                                    <th>Amount</th>
+                                    <th>Notice Summary</th>
+                                    <th>Timestamp</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rewards-penalties-body">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 5: COURIER PAST SERVICES -->
+        <div id="tab-courier-services" class="tab-pane">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Courier Performance & Service History (Output 6)</h2>
+                </div>
+                <div class="card-body">
+                    <div style="display: flex; gap: 0.5rem; max-width: 600px; margin-bottom: 1rem;">
+                        <select id="courier-query-select" class="form-control">
+                            <!-- Populated dynamically -->
+                        </select>
+                        <button class="btn btn-primary" onclick="queryCourierPastServices()">Query History</button>
+                    </div>
+
+                    <div id="courier-service-report-container">
+                        <div style="padding: 1.5rem; text-align: center; color: var(--gray-600); font-size: 0.85rem;">
+                            Select a courier partner above to inspect operational trip records, SLA adherence statistics, and financial settlement summaries.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 6: DELIVERY ARCHIVE -->
+        <div id="tab-archive" class="tab-pane">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Concluded Deliveries Archive</h2>
+                    <button class="btn btn-primary btn-sm" onclick="triggerArchive()">Archive Completed & Cancelled Orders</button>
+                </div>
+                <div class="card-body">
+                    <p style="font-size: 0.83rem; color: var(--gray-600); margin-bottom: 1rem;">
+                        Concluded consignments (Delivered or Cancelled) are catalogued for compliance, long-term analytics, and auditing.
+                    </p>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Tracking ID</th>
+                                    <th>Route Summary</th>
+                                    <th>Locality Transfer</th>
+                                    <th>Assigned Courier</th>
+                                    <th>Status</th>
+                                    <th>Shipping Fee</th>
+                                    <th>Archived At</th>
+                                </tr>
+                            </thead>
+                            <tbody id="archive-table-body">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 7: COURIERS & RATES -->
+        <div id="tab-couriers" class="tab-pane">
+            <div class="grid-2">
+                <!-- Couriers List -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Registered Fleet & Locality Coverage</h2>
+                        <button class="btn btn-secondary btn-sm" onclick="loadCouriersManagement()">Refresh</button>
+                    </div>
+                    <div class="card-body" style="padding: 0;">
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Courier Partner</th>
+                                        <th>Vehicle & Payload</th>
+                                        <th>Coverage Localities</th>
+                                        <th>Rate Schedule</th>
+                                        <th>Score</th>
+                                        <th>Active Load</th>
+                                        <th>Wallet Balance</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="couriers-mgmt-body">
+                                    <!-- Populated dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Add Courier Form -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Register Courier Partner</h2>
+                    </div>
+                    <div class="card-body">
+                        <form id="add-courier-form" onsubmit="handleAddCourier(event)">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Company / Courier Name</label>
+                                    <input type="text" id="courier-name" class="form-control" required placeholder="e.g. ExpressLine Logistics (Ajay)">
+                                </div>
+                                <div class="form-group">
+                                    <label>Phone Contact</label>
+                                    <input type="text" id="courier-phone" class="form-control" required placeholder="+91-...">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Email Address</label>
+                                    <input type="email" id="courier-email" class="form-control" placeholder="operations@courier.com">
+                                </div>
+                                <div class="form-group">
+                                    <label>Vehicle Classification</label>
+                                    <select id="courier-vehicle" class="form-control">
+                                        <option value="Motorbike">Motorbike</option>
+                                        <option value="EV Cargo Scooter">EV Cargo Scooter</option>
+                                        <option value="Delivery Van">Delivery Van</option>
+                                        <option value="Mini Truck">Mini Truck</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Max Payload (kg)</label>
+                                    <input type="number" id="courier-capacity" class="form-control" required value="20" step="1">
+                                </div>
+                                <div class="form-group">
+                                    <label>Quality Rating (1.0 - 5.0)</label>
+                                    <input type="number" id="courier-rating" class="form-control" step="0.1" min="1" max="5" value="4.5">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Serviceable Localities (comma-separated)</label>
+                                <input type="text" id="courier-localities" class="form-control" required placeholder="e.g. Adampur, Barari, Station Road, Zero Mile">
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Base Tariff (₹)</label>
+                                    <input type="number" id="courier-base-fare" class="form-control" required value="50" step="1">
+                                </div>
+                                <div class="form-group">
+                                    <label>Rate per kg (₹)</label>
+                                    <input type="number" id="courier-rate-kg" class="form-control" required value="12" step="1">
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary" style="width: 100%;">
+                                Register Courier Partner
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 8: SE LAB SPECIFICATIONS -->
+        <div id="tab-specs" class="tab-pane">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Software Engineering Lab Specifications & Requirements Mapping</h2>
+                </div>
+                <div class="card-body">
+                    <div class="grid-2">
+                        <div class="spec-box">
+                            <h4>(a) Actors in the System</h4>
+                            <ul>
+                                <li><strong>Online Shopping Portal / Customer:</strong> Submits origin, destination, and payload specs; tracks real-time consignment progression; requests schedule modifications or order cancellations.</li>
+                                <li><strong>Courier Partner / Delivery Agent:</strong> Receives automated assignments; updates transit milestones (Picked Up, In Transit, Out for Delivery, Delivered); receives payouts and on-time SLA bonuses; incurs penalties for SLA breaches.</li>
+                                <li><strong>Logistics Dispatcher / System Admin:</strong> Manages courier fleet and locality coverage matrix; monitors fleet capacity; oversees SLA settlement notices; executes archival of historical records.</li>
+                            </ul>
+                        </div>
+
+                        <div class="spec-box">
+                            <h4>(b) Use Cases per Actor</h4>
+                            <ul>
+                                <li><strong>UC01: Book Delivery</strong> (Customer/Portal) &mdash; Evaluates candidate couriers based on locality, cost, rating, and load. Produces Output 1 (Booking Confirmation).</li>
+                                <li><strong>UC02: Check Delivery Status</strong> (Customer/Agent) &mdash; Queries transit logs. Produces Output 2 (Delivery Status Report).</li>
+                                <li><strong>UC03: Cancel Booking</strong> (Customer/Agent) &mdash; Terminates delivery, releases courier workload. Produces Output 3 (Cancellation Confirmation).</li>
+                                <li><strong>UC04: Reschedule Delivery</strong> (Customer/Dispatcher) &mdash; Updates promised SLA window. Produces Output 4 (Updated Record after Rescheduling).</li>
+                                <li><strong>UC05: Calculate Rewards/Penalties</strong> (System) &mdash; Compares actual completion against promised SLA. Produces Output 5 (Notice of Reward/Penalty).</li>
+                                <li><strong>UC06: Query Courier Past Services</strong> (Courier/Dispatcher) &mdash; Produces Output 6 (List of Past Services for a Given Courier).</li>
+                                <li><strong>UC07: Archive Deliveries</strong> (Dispatcher) &mdash; Archives concluded consignments.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="grid-2" style="margin-top: 1rem;">
+                        <div class="spec-box">
+                            <h4>(c) Entity-Relationship Data Model</h4>
+                            <ul>
+                                <li><code>couriers</code>: id, name, phone, email, vehicle_type, max_capacity_kg, serviceable_localities, base_fare, rate_per_kg, rating, is_active, current_active_orders, total_completed_orders, wallet_balance.</li>
+                                <li><code>deliveries</code>: id, tracking_id, sender_name, sender_phone, source_address, source_locality, receiver_name, receiver_phone, dest_address, dest_locality, package_weight_kg, package_type, service_type, assigned_courier_id (FK), shipping_cost, courier_payout, status, booked_at, promised_delivery_time, actual_delivery_time, rescheduled_count, is_archived.</li>
+                                <li><code>delivery_logs</code>: id, delivery_id (FK), status, remarks, timestamp.</li>
+                                <li><code>reschedule_logs</code>: id, delivery_id (FK), old_delivery_time, new_delivery_time, reason, rescheduled_at.</li>
+                                <li><code>cancellation_records</code>: id, delivery_id (FK), cancelled_by, reason, cancellation_fee, refund_status, cancelled_at.</li>
+                                <li><code>rewards_penalties</code>: id, delivery_id (FK), courier_id (FK), type, amount, reason, notice_text, created_at.</li>
+                            </ul>
+                        </div>
+
+                        <div class="spec-box">
+                            <h4>(d) Constraints & Business Rules Enforced</h4>
+                            <ul>
+                                <li><strong>Locality & Payload Constraint:</strong> Courier must service source/destination localities and have vehicle capacity &ge; consignment weight.</li>
+                                <li><strong>Sequential Transit Pipeline:</strong> Milestones must progress in strict order: <code>Booked</code> &rarr; <code>Picked Up</code> &rarr; <code>In Transit</code> &rarr; <code>Out for Delivery</code> &rarr; <code>Delivered</code>. Skipping steps is prevented.</li>
+                                <li><strong>Status Immutability Rule:</strong> Consignments with terminal status (<code>Delivered</code>, <code>Cancelled</code>, or <code>Expired</code>) cannot be modified or rescheduled.</li>
+                                <li><strong>SLA Reward / Penalty Rule:</strong> Delivery on or before SLA deadline awards <strong>+₹100 bonus</strong>; deliveries completed past SLA deadline trigger <strong>-₹50 penalty</strong>.</li>
+                                <li><strong>Deadline Expiry & Forfeiture:</strong> Consignments exceeding the delivery deadline without completion can be expired with a <strong>-₹100 SLA failure penalty</strong> deducted from the courier.</li>
+                                <li><strong>Archive Integrity Rule:</strong> Only terminal status records (<code>Delivered</code>, <code>Cancelled</code>, <code>Expired</code>) are eligible for archival.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <footer style="text-align: center; padding: 1.3rem; font-size: 0.78rem; color: var(--gray-600); border-top: 1px solid var(--gray-200); background: #ffffff;">
+        CS311 Software Engineering Lab &bull; IIIT Bhagalpur &bull; Project P03: Delivery Agent System Prototype
+    </footer>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
