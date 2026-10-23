@@ -4,15 +4,54 @@ import os
 from datetime import datetime
 from database import init_db, get_db_connection
 import business_logic as bl
+import mongo_db
 
 app = Flask(__name__)
 
 # Ensure DB is created and seeded on startup
 init_db()
 
+# Auto-detect MongoDB if running locally
+mongo_client, mongo_db_inst = mongo_db.get_mongo_client(timeout_ms=800)
+if mongo_client and mongo_db_inst:
+    try:
+        mongo_db.init_mongo_collections(mongo_db_inst)
+    except Exception:
+        pass
+
 @app.route('/')
 def index():
     return render_template('index.html')
+
+@app.route('/api/db/status', methods=['GET'])
+def api_db_status():
+    try:
+        return jsonify(mongo_db.get_db_status())
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/db/connect', methods=['POST'])
+def api_db_connect():
+    try:
+        data = request.json or {}
+        uri = data.get('uri', '').strip()
+        if not uri:
+            return jsonify({'success': False, 'error': 'MongoDB URI cannot be empty.'}), 400
+
+        client, db = mongo_db.get_mongo_client(uri, timeout_ms=3000)
+        if client and db:
+            mongo_db.init_mongo_collections(db)
+            conn = get_db_connection()
+            mongo_db.sync_sqlite_to_mongo(conn, db)
+            conn.close()
+            return jsonify({
+                'success': True,
+                'message': 'Connected to MongoDB and synchronized all records successfully.',
+                'status': mongo_db.get_db_status()
+            })
+        return jsonify({'success': False, 'error': 'Could not connect to MongoDB server. Ensure daemon or Atlas URI is reachable.'}), 400
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/overview', methods=['GET'])
 def api_overview():

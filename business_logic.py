@@ -2,6 +2,7 @@ import sqlite3
 from datetime import datetime, timedelta
 import random
 from database import get_db_connection
+import mongo_db
 
 def get_all_localities():
     """Retrieve distinct serviceable localities from active couriers."""
@@ -187,6 +188,33 @@ def book_delivery(data):
 
     conn.commit()
     conn.close()
+
+    # Sync to MongoDB if connected
+    try:
+        mongo_db.mongo_sync_new_delivery({
+            'tracking_id': tracking_id,
+            'sender_name': sender_name,
+            'sender_phone': sender_phone,
+            'source_address': source_address,
+            'source_locality': source_locality,
+            'receiver_name': receiver_name,
+            'receiver_phone': receiver_phone,
+            'dest_address': dest_address,
+            'dest_locality': dest_locality,
+            'package_weight_kg': weight_kg,
+            'package_type': package_type,
+            'service_type': service_type,
+            'assigned_courier_id': selected['courier_id'],
+            'shipping_cost': selected['total_cost'],
+            'courier_payout': selected['courier_payout'],
+            'status': 'Booked',
+            'booked_at': now_str,
+            'promised_delivery_time': promised_str,
+            'rescheduled_count': 0,
+            'is_archived': 0
+        }, selected)
+    except Exception:
+        pass
 
     # Output 1: Booking confirmation
     return {
